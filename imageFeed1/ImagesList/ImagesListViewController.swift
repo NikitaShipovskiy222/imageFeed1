@@ -1,8 +1,13 @@
-
+//
+//  ViewController.swift
+//  ImageFeed
+//
+//  Created by Konstantin Lyashenko on 06.05.2024.
+//
 
 import UIKit
 
-class ImagesListViewController: UIViewController {
+final class ImagesListViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
@@ -23,6 +28,13 @@ class ImagesListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(tableView)
+        view.backgroundColor = .ypBlack
+        
+        if let tabBarItem = self.tabBarItem {
+            let imageInset = UIEdgeInsets(top: 13, left: 0, bottom: -13, right: 0)
+            tabBarItem.imageInsets = imageInset
+        }
+        
         configureTableView()
     }
     
@@ -45,7 +57,7 @@ class ImagesListViewController: UIViewController {
         ])
     }
     
-    private func configCell(for cell: ImagesListCell, with indexPath: IndexPath) {
+    private func configCell(_ cell: ImagesListCell, for indexPath: IndexPath) {
         cell.backgroundColor = .ypBlack
         cell.selectionStyle = .none
         
@@ -55,12 +67,11 @@ class ImagesListViewController: UIViewController {
         let isLiked = indexPath.row % 2 == 0
         let tintColor = isLiked ? UIColor.white.withAlphaComponent(0.5) : UIColor.red
         
-        DispatchQueue.main.async {
-            cell.configure(withImage: image, text: dateText, isLiked: isLiked, tintColor: tintColor)
-        }
+        cell.configure(withImage: image, text: dateText, isLiked: isLiked, tintColor: tintColor)
     }
 }
 
+// MARK: - UITableViewDataSource
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return photosName.count
@@ -68,7 +79,7 @@ extension ImagesListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath) as! ImagesListCell
-        configCell(for: cell, with: indexPath)
+        configCell(cell, for: indexPath)
         return cell
     }
     
@@ -84,7 +95,18 @@ extension ImagesListViewController: UITableViewDataSource {
     }
 }
 
+// MARK: - UITableViewDelegate
 extension ImagesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let singleImageViewController = SingleImageViewController()
+        
+        guard let image = UIImage(named: photosName[indexPath.row]) else { return }
+        
+        singleImageViewController.configure(image: image)
+        singleImageViewController.modalPresentationStyle = .fullScreen
+        
+        DispatchQueue.main.async {
+            self.present(singleImageViewController, animated: true, completion: nil)
+        }
     }
 }

@@ -1,14 +1,25 @@
-
+//
+//  ImageTableViewCell.swift
+//  ImageFeed
+//
+//  Created by Konstantin Lyashenko on 07.05.2024.
+//
 
 import UIKit
 
 final class ImagesListCell: UITableViewCell {
     static let reuseIdentifier = "ImagesListCell"
     
-    private let customContentView = UIView()
-    let likeButton = UIButton(type: .custom)
-
-    private let image: UIImageView = {
+    private lazy var customContentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .ypBlack
+        view.layer.cornerRadius = 16
+        view.clipsToBounds = true
+        return view
+    }()
+    
+    private lazy var image: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -16,13 +27,23 @@ final class ImagesListCell: UITableViewCell {
         return imageView
     }()
     
-    private let customTextLabel: UILabel = {
+    private lazy var customTextLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         label.textColor = .ypWhite
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    private lazy var likeButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = .ypGray
+        let heartImage = UIImage(systemName: "heart.fill")?.withRenderingMode(.alwaysTemplate)
+        button.setImage(heartImage, for: .normal)
+        button.addTarget(self, action: #selector(likeButtonPressed), for: .touchUpInside)
+        return button
     }()
     
     override func layoutSubviews() {
@@ -50,20 +71,6 @@ final class ImagesListCell: UITableViewCell {
     }
     
     private func configureSubviews() {
-        customContentView.translatesAutoresizingMaskIntoConstraints = false
-        customContentView.backgroundColor = .ypBlack
-        customContentView.layer.cornerRadius = 16
-        customContentView.clipsToBounds = true
-        
-        if let heartImage = UIImage(systemName: "heart.fill") {
-            let resizedHeartImage = heartImage.resizableImage(withCapInsets: .zero, resizingMode: .tile)
-            
-            likeButton.setImage(resizedHeartImage, for: .normal)
-            //likeButton.tintColor = .ypWhite.withAlphaComponent(0.5)
-            likeButton.addTarget(self, action: #selector(likeButtonPressed), for: .touchUpInside)
-            likeButton.translatesAutoresizingMaskIntoConstraints = false
-        }
-
         NSLayoutConstraint.activate([
             customContentView.topAnchor.constraint(equalTo: topAnchor),
             customContentView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
@@ -88,14 +95,11 @@ final class ImagesListCell: UITableViewCell {
     }
     
     @objc func likeButtonPressed() {
-        //likeButton.tintColor = likeButton.tintColor == .ypRed ? .ypWhite.withAlphaComponent(0.5) : .ypRed
+        likeButton.tintColor = likeButton.tintColor == .ypRed ? .ypWhite.withAlphaComponent(0.5) : .ypRed
     }
     
     func configure(withImage image: UIImage?, text: String, isLiked: Bool, tintColor: UIColor) {
         self.image.image = image
         customTextLabel.text = text
-        let likeImage = isLiked ? UIImage(systemName: "heart.fill") : UIImage(systemName: "heart")
-        likeButton.setImage(likeImage, for: .normal)
-        likeButton.tintColor = tintColor
     }
 }

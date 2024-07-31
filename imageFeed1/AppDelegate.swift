@@ -1,36 +1,29 @@
-//
-//  AppDelegate.swift
-//  imageFeed1
-//
-//  Created by Nikita Shipovskiy on 31/07/2024.
-//
+
 
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
-
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        if KeychainService.shared.get(valueFor: "accessKey") == nil {
+            _ = KeychainService.shared.set(value: "YDB9YmrpeX5TFK7woqynOGi5hBWLuoBG8bJ9kxaOLb8", for: "accessKey")
+        }
+        if KeychainService.shared.get(valueFor: "secretKey") == nil {
+            _ = KeychainService.shared.set(value: "oEgPi3ZUXExKMhNxwpw0eAKRWBCyfRjh17NuYONkMEs", for: "secretKey")
+        }
+        if KeychainService.shared.get(valueFor: "redirectURI") == nil {
+            _ = KeychainService.shared.set(value: "urn:ietf:wg:oauth:2.0:oob", for: "redirectURI")
+        }
+        
         return true
     }
 
     // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        // Called when a new scene session is being created.
-        // Use this method to select a configuration to create the new scene with.
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
-
-    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-        // Called when the user discards a scene session.
-        // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
-        // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
-    }
-
-
 }
 
