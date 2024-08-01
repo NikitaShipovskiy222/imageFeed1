@@ -1,9 +1,4 @@
-//
-//  ProfileViewController.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 16.05.2024.
-//
+
 
 import UIKit
 
@@ -12,18 +7,17 @@ final class ProfileViewController: UIViewController {
     private lazy var profileImage: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(systemName: "person.crop.circle.fill")
-        imageView.tintColor = .ypGray
-        imageView.layer.cornerRadius = 25
-        imageView.clipsToBounds = true
+        imageView.image = UIImage.photo
+//        imageView.tintColor = .ypGray
+//        imageView.layer.cornerRadius = 25
+//        imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
     private lazy var exitButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(systemName: "ipad.and.arrow.forward"), for: .normal)
-        button.tintColor = .ypRed
+        button.setImage(UIImage(named: "Exit"), for: .normal)
         button.addTarget(self, action: #selector(exitButtonPressed), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

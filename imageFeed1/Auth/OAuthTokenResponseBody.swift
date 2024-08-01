@@ -1,9 +1,4 @@
-//
-//  OAuthTokenResponseBody.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 05.06.2024.
-//
+
 
 import Foundation
 // MARK: - model

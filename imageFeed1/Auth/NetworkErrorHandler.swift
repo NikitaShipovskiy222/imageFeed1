@@ -1,9 +1,4 @@
-//
-//  NetworkErrorHandler.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 04.06.2024.
-//
+
 
 import Foundation
 

@@ -1,9 +1,4 @@
-//
-//  WebViewViewController.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 31.05.2024.
-//
+
 
 import UIKit
 import WebKit
