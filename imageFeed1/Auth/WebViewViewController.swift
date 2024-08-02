@@ -15,6 +15,9 @@ class WebViewViewController: UIViewController {
     
     weak var delegate: WebViewViewControllerDelegate?
     
+    private var authService: AuthService?
+    private var estimatedProgressObservation: NSKeyValueObservation?
+    
     private lazy var webView: WKWebView = {
         let webView = WKWebView()
         webView.translatesAutoresizingMaskIntoConstraints = false
@@ -37,8 +40,6 @@ class WebViewViewController: UIViewController {
         return backButton
     }()
     
-    private var authService: AuthService?
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
@@ -51,28 +52,12 @@ class WebViewViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
+        estimatedProgressObservation = webView.observe(\.estimatedProgress, changeHandler: { [weak self] _, _ in
+            guard let self else { return }
+            
+            self.updateProgress()
+        })
         authService?.loadAuthView()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        
-        webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?,
-                               of object: Any?,
-                               change: [NSKeyValueChangeKey : Any]?,
-                               context: UnsafeMutableRawPointer?) {
-        if keyPath == #keyPath(WKWebView.estimatedProgress) {
-            updateProgress()
-        } else {
-            super.observeValue(forKeyPath: keyPath,
-                               of: object,
-                               change: change,
-                               context: context)
-        }
     }
 
     private func updateProgress() {
@@ -105,15 +90,19 @@ class WebViewViewController: UIViewController {
     }
     
     @objc private func backButtonPressed() {
-        let alert = UIAlertController(title: "Выход из авторизации",
-                                      message: "Вы уверены, что хотите покинуть страницу авторизации?",
-                                      preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Выход", style: .destructive) { [weak self] _ in
-            guard let self else { return }
-            self.delegate?.webViewViewControllerDidCancel(self)
-        })
-        present(alert, animated: true)
+        let alertModel = AlertModel(
+            title: "Выход из авторизации",
+            message: "Вы уверены, что хотите покинуть страницу авторизации?",
+            buttons: [
+                AlertButton(title: "Отмена", style: .cancel, handler: nil),
+                AlertButton(title: "Выход", style: .destructive, handler: { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.webViewViewControllerDidCancel(self)
+                })
+            ],
+            context: .back
+        )
+        AlertPresenter.showAlert(with: alertModel, delegate: self)
     }
 }
 
@@ -126,8 +115,20 @@ extension WebViewViewController: AuthServiceDelegate {
     func authServiceDidCancel(_ authService: AuthService) {
         delegate?.webViewViewControllerDidCancel(self)
     }
-
+    
     func authService(_ authService: AuthService, didFailWithError error: Error) {
-        delegate?.webViewViewController(self, didFailWithError: error)
+        let alertModel = AlertModel(
+            title: "Ошибка",
+            message: NetworkErrorHandler.errorMessage(from: error),
+            buttons: [AlertButton(title: "OK", style: .cancel, handler: nil)],
+            context: .error
+        )
+        AlertPresenter.showAlert(with: alertModel, delegate: self)
+    }
+}
+// MARK: - AlertPresenterDelegate
+extension WebViewViewController: AlertPresenterDelegate {
+    func presentAlert(_ alert: UIAlertController) {
+        present(alert, animated: true, completion: nil)
     }
 }

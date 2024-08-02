@@ -1,9 +1,4 @@
-//
-//  AuthService.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 04.06.2024.
-//
+
 
 
 import Foundation
@@ -59,7 +54,7 @@ final class AuthService: NSObject {
 
 // MARK: - WKNavigationDelegate
 extension AuthService: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, 
+    func webView(_ webView: WKWebView,
                  decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         if let code = code(from: navigationAction) {
@@ -74,6 +69,8 @@ extension AuthService: WKNavigationDelegate {
         showErrorAlert(with: NetworkErrorHandler.errorMessage(from: error))
         print("Ошибка при загрузке: \(error.localizedDescription)")
     }
+    
+
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         print("Загрузка завершена")
