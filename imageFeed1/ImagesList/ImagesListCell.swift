@@ -1,9 +1,18 @@
 
 
 import UIKit
+import SkeletonView
 
 final class ImagesListCell: UITableViewCell {
     static let reuseIdentifier = "ImagesListCell"
+    
+    var photoId: String?
+    var isLiked: Bool = false {
+        didSet {
+            likeButton.tintColor = isLiked ? .ypRed : .ypWhite.withAlphaComponent(0.5)
+        }
+    }
+    var likeButtonAction: ((String, Bool) -> Void)?
     
     private lazy var customContentView: UIView = {
         let view = UIView()
@@ -14,11 +23,11 @@ final class ImagesListCell: UITableViewCell {
         return view
     }()
     
-    private lazy var image: UIImageView = {
+    private lazy var customImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.backgroundColor = .ypBlack
+        imageView.isSkeletonable = true
         return imageView
     }()
     
@@ -47,19 +56,30 @@ final class ImagesListCell: UITableViewCell {
         configureSubviews()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        customImageView.kf.cancelDownloadTask()
+    }
+    
     private func setupViews() {
         contentView.addSubview(customContentView)
-        customContentView.addSubview(image)
-        customContentView.addSubview(likeButton)
-        customContentView.addSubview(customTextLabel)
+        [customImageView, likeButton, customTextLabel].forEach {
+            customContentView.addSubview($0)
+        }
         addGradientView()
     }
     
     private func addGradientView() {
-        let gradientView = UIView(frame: CGRect(x: 0.0, y: customContentView.frame.height - 30.0, width: image.bounds.width, height: 30.0))
+        let gradientView = UIView(frame: CGRect(
+            x: 0.0,
+            y: customContentView.frame.height - 30.0,
+            width: customImageView.bounds.width,
+            height: 30.0)
+        )
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = gradientView.bounds
-        gradientLayer.colors = [UIColor.clear.cgColor, UIColor.ypBlack.withAlphaComponent(0.4).cgColor]
+        gradientLayer.colors = [UIColor.clear.cgColor,
+                                UIColor.ypBlack.withAlphaComponent(0.4).cgColor]
         gradientLayer.locations = [0.0, 1.0]
         gradientView.layer.addSublayer(gradientLayer)
         customContentView.addSubview(gradientView)
@@ -72,10 +92,10 @@ final class ImagesListCell: UITableViewCell {
             customContentView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             customContentView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
             
-            image.topAnchor.constraint(equalTo: customContentView.topAnchor),
-            image.bottomAnchor.constraint(equalTo: customContentView.bottomAnchor),
-            image.leadingAnchor.constraint(equalTo: customContentView.leadingAnchor),
-            image.trailingAnchor.constraint(equalTo: customContentView.trailingAnchor),
+            customImageView.topAnchor.constraint(equalTo: customContentView.topAnchor),
+            customImageView.bottomAnchor.constraint(equalTo: customContentView.bottomAnchor),
+            customImageView.leadingAnchor.constraint(equalTo: customContentView.leadingAnchor),
+            customImageView.trailingAnchor.constraint(equalTo: customContentView.trailingAnchor),
             
             customTextLabel.heightAnchor.constraint(equalToConstant: 18),
             customTextLabel.bottomAnchor.constraint(equalTo: customContentView.bottomAnchor, constant: -8),
@@ -88,13 +108,63 @@ final class ImagesListCell: UITableViewCell {
             likeButton.heightAnchor.constraint(equalToConstant: 42)
         ])
     }
+}
+
+// MARK: - Button Action
+private extension ImagesListCell {
+  @objc func likeButtonPressed() {
+    guard let photoId = photoId else { return }
     
-    @objc func likeButtonPressed() {
-        likeButton.tintColor = likeButton.tintColor == .ypRed ? .ypWhite.withAlphaComponent(0.5) : .ypRed
+    isLiked.toggle()
+    likeButtonAction?(photoId, isLiked)
+  }
+}
+
+
+// MARK: - SkeletonView
+private extension ImagesListCell {
+    private func showSkeletons() {
+        DispatchQueue.main.async { // анимация показалась и исчезла, не вижу смысла ослаблять ссылку
+            self.customImageView.showAnimatedGradientSkeleton(usingGradient: .init(baseColor: .darkGray))
+        }
     }
-    
-    func configure(withImage image: UIImage?, text: String, isLiked: Bool, tintColor: UIColor) {
-        self.image.image = image
+
+    private func hideSkeletons() {
+        DispatchQueue.main.async { // аналогично
+            self.customImageView.hideSkeleton()
+            self.customImageView.isSkeletonable = false
+        }
+    }
+}
+
+// MARK: - Configure Image
+extension ImagesListCell {
+    func configure(withImageURL imageURL: URL?, text: String, isLiked: Bool, photoId: String) {
+        
+        self.photoId = photoId
+        self.isLiked = isLiked
+        
+        customImageView.contentMode = .center
+        showSkeletons()
+        
+        if let imageURL = imageURL {
+            customImageView.kf.setImage(with: imageURL,
+                                        placeholder: UIImage(named: "Stub"),
+                                        options: [
+                                            .transition(.fade(0.1)),
+                                            .cacheOriginalImage]) { [weak self] result in
+                                                guard let self else { return }
+                                                switch result {
+                                                case .success(_):
+                                                    self.customImageView.contentMode = .scaleAspectFill
+                                                    hideSkeletons()
+                                                case .failure(_):
+                                                    break
+                                                }
+                                            }
+        } else {
+            customImageView.image = nil
+        }
         customTextLabel.text = text
     }
 }

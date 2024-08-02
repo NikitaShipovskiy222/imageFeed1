@@ -1,4 +1,5 @@
 
+
 import Foundation
 
 enum APIEndpoints {
@@ -11,6 +12,10 @@ enum APIEndpoints {
             return "https://api.unsplash.com/users/\(username)"
         }
         static let me = "https://api.unsplash.com/me"
+    }
+    
+    enum Photos {
+        static let photos = "https://api.unsplash.com/photos"
     }
 }
 
