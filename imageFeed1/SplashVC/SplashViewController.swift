@@ -1,4 +1,5 @@
 
+
 import UIKit
 
 // MARK: - Object
@@ -7,23 +8,18 @@ final class SplashViewController: UIViewController {
     private let profileService = ProfileService.shared
     private let storage = OAuth2TokenStorage.shared
     private let profileImageService = ProfileImageService.shared
+    private let imagesListService = ImagesListService.shared
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkAuthorization()
     }
     
-    private func checkAuthorization() {
-        if let token = storage.token {
-            fetchProfile(token)
-        } else {
-            showAuthViewController()
-        }
-    }
-    
     private func switchToTabBarController() {
         guard let window = UIApplication.shared.windows.first else {
-            assertionFailure("Invalid window configuration")
+            Logger.shared.log(.error,
+                              message: "SplashViewController: неверная конфигурация window",
+                              metadata: ["❌": ""])
             return
         }
         
@@ -60,9 +56,27 @@ final class SplashViewController: UIViewController {
         let imagesNavigationController = UINavigationController(rootViewController: imagesListViewController)
         let profileNavigationController = UINavigationController(rootViewController: profileViewController)
         
-        tabBarController.viewControllers = [imagesNavigationController, profileNavigationController]
-        
+        tabBarController.viewControllers = [
+            imagesNavigationController,
+            profileNavigationController
+        ]
         return tabBarController
+    }
+}
+
+// MARK: - Authorization
+private extension SplashViewController {
+    
+    private func checkAuthorization() {
+        if let token = storage.token {
+            if !profileService.isProfileLoaded {
+                fetchProfile(token)
+            } else {
+                switchToTabBarController()
+            }
+        } else {
+            showAuthViewController()
+        }
     }
 }
 
@@ -88,16 +102,14 @@ extension SplashViewController: AuthViewControllerDelegate {
                             case .success(_):
                                 self.switchToTabBarController()
                             case .failure(let error):
-                                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                                print("Нет данных аватарки: \(errorMessage)")
+                                _ = NetworkErrorHandler.errorMessage(from: error)
                                 self.showAuthViewController()
                             }
                         }
                     }
                 case .failure(let error):
                     UIBlockingProgressHUD.dismiss()
-                    let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                    print("Нет данных профиля: \(errorMessage)")
+                    _ = NetworkErrorHandler.errorMessage(from: error)
                     self.showAuthViewController()
                 }
             }
@@ -105,11 +117,6 @@ extension SplashViewController: AuthViewControllerDelegate {
     }
     
     func didAuthenticate(_ vc: AuthViewController) {
-        vc.dismiss(animated: true) { [weak self] in
-            guard let self,
-                  let token = self.storage.token else { return }
-            
-            fetchProfile(token)
-        }
+        vc.dismiss(animated: true)
     }
 }

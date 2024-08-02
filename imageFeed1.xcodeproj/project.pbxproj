@@ -20,7 +20,6 @@
 		01AB88752C5A4E95006F96F4 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB886D2C5A4E95006F96F4 /* KeychainService.swift */; };
 		01AB88762C5A4E95006F96F4 /* WebViewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB886E2C5A4E95006F96F4 /* WebViewViewController.swift */; };
 		01AB88772C5A4E95006F96F4 /* OAuth2TokenStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB886F2C5A4E95006F96F4 /* OAuth2TokenStorage.swift */; };
-		01AB88782C5A4E95006F96F4 /* NetworkErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88702C5A4E95006F96F4 /* NetworkErrorHandler.swift */; };
 		01AB88792C5A4E95006F96F4 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88712C5A4E95006F96F4 /* AuthService.swift */; };
 		01AB887C2C5A4EB6006F96F4 /* SingleImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB887B2C5A4EB6006F96F4 /* SingleImageViewController.swift */; };
 		01AB887F2C5A4EC6006F96F4 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB887E2C5A4EC6006F96F4 /* ProfileViewController.swift */; };
@@ -38,6 +37,8 @@
 		01AB88A42C5CCA46006F96F4 /* ProfileImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88A22C5CCA46006F96F4 /* ProfileImageService.swift */; };
 		01AB88A52C5CCA46006F96F4 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88A32C5CCA46006F96F4 /* ProfileService.swift */; };
 		01AB88A72C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88A62C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift */; };
+		01AB88AC2C5CEDE9006F96F4 /* GenericNetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88AB2C5CEDE9006F96F4 /* GenericNetworkService.swift */; };
+		01AB88AF2C5CEE9A006F96F4 /* ImagesListService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88AE2C5CEE9A006F96F4 /* ImagesListService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,7 +57,6 @@
 		01AB886D2C5A4E95006F96F4 /* KeychainService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		01AB886E2C5A4E95006F96F4 /* WebViewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebViewViewController.swift; sourceTree = "<group>"; };
 		01AB886F2C5A4E95006F96F4 /* OAuth2TokenStorage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OAuth2TokenStorage.swift; sourceTree = "<group>"; };
-		01AB88702C5A4E95006F96F4 /* NetworkErrorHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkErrorHandler.swift; sourceTree = "<group>"; };
 		01AB88712C5A4E95006F96F4 /* AuthService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		01AB887B2C5A4EB6006F96F4 /* SingleImageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SingleImageViewController.swift; sourceTree = "<group>"; };
 		01AB887E2C5A4EC6006F96F4 /* ProfileViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
@@ -71,6 +71,8 @@
 		01AB88A22C5CCA46006F96F4 /* ProfileImageService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileImageService.swift; sourceTree = "<group>"; };
 		01AB88A32C5CCA46006F96F4 /* ProfileService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		01AB88A62C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIBlockingProgressHUD.swift; sourceTree = "<group>"; };
+		01AB88AB2C5CEDE9006F96F4 /* GenericNetworkService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericNetworkService.swift; sourceTree = "<group>"; };
+		01AB88AE2C5CEE9A006F96F4 /* ImagesListService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImagesListService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,8 +129,10 @@
 		01AB88442C5A44ED006F96F4 /* ImagesList */ = {
 			isa = PBXGroup;
 			children = (
+				01AB88AD2C5CEE85006F96F4 /* Model */,
 				01AB88462C5A4505006F96F4 /* ImagesListCell.swift */,
 				01AB88452C5A4505006F96F4 /* ImagesListViewController.swift */,
+				01AB88AE2C5CEE9A006F96F4 /* ImagesListService.swift */,
 			);
 			path = ImagesList;
 			sourceTree = "<group>";
@@ -148,7 +152,6 @@
 				01AB88712C5A4E95006F96F4 /* AuthService.swift */,
 				01AB886C2C5A4E95006F96F4 /* AuthViewController.swift */,
 				01AB886D2C5A4E95006F96F4 /* KeychainService.swift */,
-				01AB88702C5A4E95006F96F4 /* NetworkErrorHandler.swift */,
 				01AB886A2C5A4E95006F96F4 /* OAuth2Service.swift */,
 				01AB886E2C5A4E95006F96F4 /* WebViewViewController.swift */,
 				01AB88A62C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift */,
@@ -205,6 +208,7 @@
 			children = (
 				01AB88992C5CC7E3006F96F4 /* NetworkErrorHandler.swift */,
 				01AB88982C5CC7E0006F96F4 /* NetworkService.swift */,
+				01AB88AB2C5CEDE9006F96F4 /* GenericNetworkService.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -223,6 +227,13 @@
 			children = (
 				01AB889F2C5CC99E006F96F4 /* ProfileResult.swift */,
 				01AB889E2C5CC99E006F96F4 /* UserResult.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		01AB88AD2C5CEE85006F96F4 /* Model */ = {
+			isa = PBXGroup;
+			children = (
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -323,12 +334,13 @@
 				01AB88A02C5CC99E006F96F4 /* UserResult.swift in Sources */,
 				01AB889A2C5CC7E3006F96F4 /* NetworkService.swift in Sources */,
 				01AB88A12C5CC99E006F96F4 /* ProfileResult.swift in Sources */,
-				01AB88782C5A4E95006F96F4 /* NetworkErrorHandler.swift in Sources */,
 				01AB88742C5A4E95006F96F4 /* AuthViewController.swift in Sources */,
 				01AB88752C5A4E95006F96F4 /* KeychainService.swift in Sources */,
+				01AB88AC2C5CEDE9006F96F4 /* GenericNetworkService.swift in Sources */,
 				01AB88A72C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift in Sources */,
 				01AB887C2C5A4EB6006F96F4 /* SingleImageViewController.swift in Sources */,
 				01AB88872C5CAB94006F96F4 /* AlertModel.swift in Sources */,
+				01AB88AF2C5CEE9A006F96F4 /* ImagesListService.swift in Sources */,
 				01AB880D2C5A3D73006F96F4 /* AppDelegate.swift in Sources */,
 				01AB887F2C5A4EC6006F96F4 /* ProfileViewController.swift in Sources */,
 				01AB880F2C5A3D73006F96F4 /* SceneDelegate.swift in Sources */,
