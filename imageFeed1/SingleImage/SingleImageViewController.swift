@@ -81,7 +81,7 @@ final class SingleImageViewController: UIViewController {
             shareButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             shareButton.widthAnchor.constraint(equalToConstant: 50),
             shareButton.heightAnchor.constraint(equalToConstant: 50),
-            shareButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -17)
+            shareButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -17)
         ])
     }
     

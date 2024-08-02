@@ -2,11 +2,20 @@
 
 import Foundation
 import Security
-
+// MARK: - protocol
+protocol KeychainServiceProtocol {
+    func set(value: String, for key: String) -> Bool
+    func get(valueFor key: String) -> String?
+    func delete(valueFor key: String) -> Bool
+}
+// MARK: - object
 final class KeychainService {
     static let shared = KeychainService()
     
     private init() {}
+}
+// MARK: - KeychainServiceProtocol
+extension KeychainService: KeychainServiceProtocol {
     
     func set(value: String, for key: String) -> Bool {
         guard let data = value.data(using: .utf8) else { return false }
@@ -34,7 +43,9 @@ final class KeychainService {
         var dataTypeRef: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
         
-        guard status == errSecSuccess, let data = dataTypeRef as? Data, let value = String(data: data, encoding: .utf8) else {
+        guard status == errSecSuccess,
+                let data = dataTypeRef as? Data,
+                let value = String(data: data, encoding: .utf8) else {
             return nil
         }
         

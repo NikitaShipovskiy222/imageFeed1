@@ -1,15 +1,12 @@
-//
-//  SplashViewController.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 05.06.2024.
-//
 
 import UIKit
 
+// MARK: - Object
 final class SplashViewController: UIViewController {
     
+    private let profileService = ProfileService.shared
     private let storage = OAuth2TokenStorage.shared
+    private let profileImageService = ProfileImageService.shared
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -17,8 +14,8 @@ final class SplashViewController: UIViewController {
     }
     
     private func checkAuthorization() {
-        if storage.token != nil {
-            switchToTabBarController()
+        if let token = storage.token {
+            fetchProfile(token)
         } else {
             showAuthViewController()
         }
@@ -71,9 +68,48 @@ final class SplashViewController: UIViewController {
 
 // MARK: - AuthViewControllerDelegate
 extension SplashViewController: AuthViewControllerDelegate {
+    
+    func fetchProfile(_ token: String) {
+        UIBlockingProgressHUD.show()
+        
+        profileService.fetchProfile(token) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else {
+                    UIBlockingProgressHUD.dismiss()
+                    return
+                }
+                
+                switch result {
+                case .success(let profile):
+                    self.profileImageService.fetchProfileImageURL(username: profile.userName, token: token) { imageResult in
+                        DispatchQueue.main.async {
+                            UIBlockingProgressHUD.dismiss()
+                            switch imageResult {
+                            case .success(_):
+                                self.switchToTabBarController()
+                            case .failure(let error):
+                                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
+                                print("Нет данных аватарки: \(errorMessage)")
+                                self.showAuthViewController()
+                            }
+                        }
+                    }
+                case .failure(let error):
+                    UIBlockingProgressHUD.dismiss()
+                    let errorMessage = NetworkErrorHandler.errorMessage(from: error)
+                    print("Нет данных профиля: \(errorMessage)")
+                    self.showAuthViewController()
+                }
+            }
+        }
+    }
+    
     func didAuthenticate(_ vc: AuthViewController) {
-        vc.dismiss(animated: true) {
-            self.switchToTabBarController()
+        vc.dismiss(animated: true) { [weak self] in
+            guard let self,
+                  let token = self.storage.token else { return }
+            
+            fetchProfile(token)
         }
     }
 }

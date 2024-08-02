@@ -1,9 +1,4 @@
-//
-//  ImageTableViewCell.swift
-//  ImageFeed
-//
-//  Created by Konstantin Lyashenko on 07.05.2024.
-//
+
 
 import UIKit
 
