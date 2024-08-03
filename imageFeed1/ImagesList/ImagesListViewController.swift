@@ -1,107 +1,149 @@
 
 
 import UIKit
+// MARK: - Protocols
+protocol ImagesListViewControllerProtocol: AnyObject {
+    func updateImagesList(startIndex: Int, endIndex: Int)
+    func reloadTableView()
+    func showStubImageView(_ isHidden: Bool)
+}
 
-final class ImagesListViewController: UIViewController {
+// MARK: - Object
+final class ImagesListViewController: UIViewController, ImagesListViewControllerProtocol {
     
-    private lazy var tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        return tableView
-    }()
+    var presenter: ImagesListPresenterProtocol?
     
-    private let photosName: [String] = Array(0..<20).map{ "\($0)" }
+    let refreshControl = UIRefreshControl()
     
-    private lazy var dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
-        dateFormatter.timeStyle = .none
-        dateFormatter.locale = Locale(identifier: "ru_RU")
-        return dateFormatter
-    }()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.addSubview(tableView)
-        view.backgroundColor = .ypBlack
-        
-        if let tabBarItem = self.tabBarItem {
-            let imageInset = UIEdgeInsets(top: 13, left: 0, bottom: -13, right: 0)
-            tabBarItem.imageInsets = imageInset
-        }
-        
-        configureTableView()
-    }
+    lazy var stubImageView = UIImageView(image: UIImage(named: "Stub"))
+    lazy var tableView = UITableView()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .ypBlack
+        refreshControl.addTarget(self, action: #selector(refreshTableView), for: .valueChanged)
+        
+        configureTableView()
+        setupConstraints()
+        presenter?.viewDidLoad()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        presenter?.fetchPhotos()
+    }
+    
+    func configure(_ presenter: ImagesListPresenterProtocol) {
+        self.presenter = presenter
+        self.presenter?.view = self
+    }
+    
     private func configureTableView() {
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.accessibilityIdentifier = "ImagesListTableView"
         tableView.separatorStyle = .none
         tableView.backgroundColor = .ypBlack
+        tableView.addSubview(refreshControl)
         tableView.register(ImagesListCell.self, forCellReuseIdentifier: ImagesListCell.reuseIdentifier)
+    }
+    
+    private func setupConstraints() {
+        [tableView, stubImageView].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            
+            stubImageView.widthAnchor.constraint(equalToConstant: 83),
+            stubImageView.heightAnchor.constraint(equalToConstant: 75),
+            stubImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stubImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
-    private func configCell(_ cell: ImagesListCell, for indexPath: IndexPath) {
-        cell.backgroundColor = .ypBlack
-        cell.selectionStyle = .none
-        
-        let imageName = photosName[indexPath.row]
-        let image = UIImage(named: imageName)
-        let dateText = dateFormatter.string(from: Date())
-        let isLiked = indexPath.row % 2 == 0
-        let tintColor = isLiked ? UIColor.white.withAlphaComponent(0.5) : UIColor.red
-        
-        cell.configure(withImage: image, text: dateText, isLiked: isLiked, tintColor: tintColor)
+    @objc func refreshTableView() {
+        presenter?.fetchPhotos()
+        tableView.reloadData()
+        refreshControl.endRefreshing()
+    }
+    
+    func updateImagesList(startIndex: Int, endIndex: Int) {
+        showStubImageView(true)
+        let indexPaths = (startIndex...endIndex).map { IndexPath(row: $0, section: 0) }
+        UIView.performWithoutAnimation { [weak self] in
+            self?.tableView.performBatchUpdates({
+                self?.tableView.insertRows(at: indexPaths, with: .none)
+            })
+        }
+    }
+    
+    func reloadTableView() {
+        tableView.reloadData()
+    }
+    
+    func showStubImageView(_ isHidden: Bool) {
+        stubImageView.isHidden = isHidden
+    }
+    
+    func makeSingleImageViewController(with imageURL: URL) -> SingleImageViewController {
+        let singleImageViewController = SingleImageViewController()
+        singleImageViewController.configure(withImageURL: imageURL)
+        singleImageViewController.modalPresentationStyle = .fullScreen
+        return singleImageViewController
     }
 }
 
 // MARK: - UITableViewDataSource
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return photosName.count
+        guard let numbersOfPhotos = presenter?.numberOfPhotos() else { return 0 }
+        return numbersOfPhotos
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: ImagesListCell.reuseIdentifier, for: indexPath) as! ImagesListCell
-        configCell(cell, for: indexPath)
+        if let photo = presenter?.photo(at: indexPath.row),
+           let dateText = presenter?.format(date: photo.createdAt), let presenter = presenter as? ImagesListPresenter {
+            cell.configure(with: photo, dateText: dateText, presenter: presenter)
+            cell.accessibilityIdentifier = "cell_\(indexPath.row)"
+        }
         return cell
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let image = UIImage(named: photosName[indexPath.row]) else { return 0 }
-        
+        guard let photo = presenter?.photo(at: indexPath.row) else { return UITableView.automaticDimension }
         let insets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
         let imageViewWidth = tableView.bounds.width - insets.left - insets.right
-        let imageWidth = image.size.width
+        let imageWidth = CGFloat(photo.size.width)
         let scale = imageViewWidth / imageWidth
-        let cellHeight = image.size.height * scale + insets.top + insets.bottom
-        return cellHeight
+        return CGFloat(photo.size.height) * scale + insets.top + insets.bottom
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let numbersOfPhotos = presenter?.numberOfPhotos() else { return }
+        if indexPath.row == numbersOfPhotos - 1 {
+            presenter?.fetchPhotos()
+        }
     }
 }
 
 // MARK: - UITableViewDelegate
 extension ImagesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let singleImageViewController = SingleImageViewController()
+        guard let photo = presenter?.photo(at: indexPath.row),
+              let imageURL = URL(string: photo.largeImageURL) else { return }
         
-        guard let image = UIImage(named: photosName[indexPath.row]) else { return }
-        
-        singleImageViewController.configure(image: image)
-        singleImageViewController.modalPresentationStyle = .fullScreen
-        
-        DispatchQueue.main.async {
-            self.present(singleImageViewController, animated: true, completion: nil)
-        }
+        let singleImageViewController = makeSingleImageViewController(with: imageURL)
+        present(singleImageViewController, animated: true, completion: nil)
     }
 }

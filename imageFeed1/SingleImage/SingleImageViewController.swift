@@ -10,7 +10,6 @@ final class SingleImageViewController: UIViewController {
         scrollView.maximumZoomScale = 1.25
         scrollView.delegate = self
         scrollView.backgroundColor = .ypBlack
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
     
@@ -19,7 +18,6 @@ final class SingleImageViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .ypBlack
         imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
@@ -28,7 +26,6 @@ final class SingleImageViewController: UIViewController {
         button.setImage(UIImage(systemName: "chevron.backward"), for: .normal)
         button.tintColor = .ypWhite
         button.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
@@ -39,28 +36,27 @@ final class SingleImageViewController: UIViewController {
         button.layer.cornerRadius = 25
         button.backgroundColor = .ypBlack
         button.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypBlack
-        
         setupViews()
-        rescaleAndCenterImageInScrollView()
-    }
-    
-    func configure(image: UIImage) {
-        imageView.image = image
-        imageView.frame.size = image.size
     }
     
     private func setupViews() {
-        view.addSubview(scrollView)
+        [scrollView, backButton, shareButton].forEach {
+            view.addSubview($0)
+        }
         scrollView.addSubview(imageView)
-        view.addSubview(backButton)
-        view.addSubview(shareButton)
+        
+        [scrollView,
+         imageView,
+         backButton,
+         shareButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -81,13 +77,16 @@ final class SingleImageViewController: UIViewController {
             shareButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             shareButton.widthAnchor.constraint(equalToConstant: 50),
             shareButton.heightAnchor.constraint(equalToConstant: 50),
-            shareButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -17)
+            shareButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 17)
         ])
     }
-    
+}
+
+// MARK: - Setting scrollView
+private extension SingleImageViewController {
     private func rescaleAndCenterImageInScrollView() {
         guard let image = imageView.image else { return }
-        
+
         let minZoomScale = scrollView.minimumZoomScale
         let maxZoomScale = scrollView.maximumZoomScale
         view.layoutIfNeeded()
@@ -97,41 +96,54 @@ final class SingleImageViewController: UIViewController {
         let vScale = visibleRectSize.height / imageSize.height
         let scale = min(maxZoomScale, max(minZoomScale, min(hScale, vScale)))
         scrollView.setZoomScale(scale, animated: false)
-        scrollView.layoutIfNeeded()
-        centerImage()
-    }
-    
-    private func centerImage() {
-        let scrollViewSize = scrollView.bounds.size
-        let imageSize = imageView.frame.size
-        let horizontalPadding = max(0, (scrollViewSize.width - imageSize.width) / 2)
-        let verticalPadding = max(0, (scrollViewSize.height - imageSize.height) / 2)
+        
+        let imageViewSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        let horizontalPadding = max(0, (visibleRectSize.width - imageViewSize.width) / 2)
+        let verticalPadding = max(0, (visibleRectSize.height - imageViewSize.height) / 2)
         scrollView.contentInset = UIEdgeInsets(top: verticalPadding,
                                                left: horizontalPadding,
                                                bottom: verticalPadding,
                                                right: horizontalPadding)
     }
-    
+}
+
+// MARK: - Button Action
+private extension SingleImageViewController {
     @objc private func backButtonTapped() {
         dismiss(animated: true, completion: nil)
     }
-    
-    @objc private func shareButtonTapped() {
-        guard let image = imageView.image else { return }
-        let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = self.view
+}
+
+// MARK: - Configure Image
+extension SingleImageViewController {
+    func configure(withImageURL imageURL: URL) {
+        imageView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+        imageView.alpha = 0
         
-        activityViewController.completionWithItemsHandler = { _, success, _, error in
-            if let error = error {
-                print("Error sharing: \(error.localizedDescription)")
-            } else if success {
-                print("Successfully shared the image")
-            } else {
-                print("Sharing was cancelled")
-            }
-        }
         DispatchQueue.main.async {
-            self.present(activityViewController, animated: true, completion: nil)
+            UIBlockingProgressHUD.show() // тут анимация показалась и и счезла, не вижу смысла ослаблять ссылку
+        }
+        
+        imageView.kf.setImage(with: imageURL) { [weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success(_):
+                UIBlockingProgressHUD.dismiss()
+                
+                UIView.animate(withDuration: 0.3,
+                               delay: 0,
+                               options: [.curveEaseOut],
+                               animations: {
+                    self.imageView.transform = CGAffineTransform.identity
+                    self.imageView.alpha = 1
+                    self.rescaleAndCenterImageInScrollView()
+                })
+            case .failure(let error):
+                UIBlockingProgressHUD.dismiss()
+                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
+                print("Ошибка загрузки изображения: \(errorMessage)")
+            }
         }
     }
 }
@@ -141,8 +153,35 @@ extension SingleImageViewController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return imageView
     }
-    
-    func scrollViewDidZoom(_ scrollView: UIScrollView) {
-        centerImage()
+}
+
+// MARK: - Share
+private extension SingleImageViewController {
+    @objc private func shareButtonTapped() {
+        guard let image = imageView.image else { return }
+        let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = self.view
+        
+        activityViewController.completionWithItemsHandler = { [weak self] _, success, _, error in
+            guard self != nil else { return }
+            
+            if let error = error {
+                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
+                Logger.shared.log(.error,
+                                  message: "ImagesListService: Не удалось расшарить изображения",
+                                  metadata: ["❌": errorMessage])
+            } else if success {
+                Logger.shared.log(.debug,
+                                  message: "SingleImageViewController: Изображения успешно расшарено",
+                                  metadata: ["✅": ""])
+            } else {
+                Logger.shared.log(.debug,
+                                  message: "SingleImageViewController: Sharing отменен",
+                                  metadata: ["✅": ""])
+            }
+        }
+        DispatchQueue.main.async {
+            self.present(activityViewController, animated: true, completion: nil)
+        }
     }
 }

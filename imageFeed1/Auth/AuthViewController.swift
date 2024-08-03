@@ -1,5 +1,4 @@
 
-
 import UIKit
 import ProgressHUD
 // MARK: - Protocol
@@ -17,13 +16,11 @@ final class AuthViewController: UIViewController {
     private lazy var image: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "VectorAuth")
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
     private lazy var loginButton: UIButton = {
         let button = UIButton()
-        button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Войти", for: .normal)
         button.setTitleColor(.ypBlack, for: .normal)
         button.titleLabel?.font = .boldSystemFont(ofSize: 17)
@@ -41,12 +38,17 @@ final class AuthViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.addSubview(image)
-        view.addSubview(loginButton)
+        [image, loginButton].forEach {
+            view.addSubview($0)
+        }
         setupConstraints()
     }
     
     private func setupConstraints() {
+        [image, loginButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
         NSLayoutConstraint.activate([
             image.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             image.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -60,21 +62,14 @@ final class AuthViewController: UIViewController {
             loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
     }
-    
+}
+
+// MARK: - Button Action
+private extension AuthViewController {
     @objc private func loginButtonPressed() {
         let webViewViewController = WebViewViewController()
         webViewViewController.delegate = self
         navigationController?.pushViewController(webViewViewController, animated: true)
-    }
-    
-    private func showErrorAlert() {
-        let alertModel = AlertModel(
-            title: "Что-то пошло не так(",
-            message: "Не удалось войти в систему",
-            buttons: [AlertButton(title: "OK", style: .cancel, handler: nil)],
-            context: .error
-        )
-        AlertPresenter.showAlert(with: alertModel, delegate: self)
     }
 }
 
@@ -92,10 +87,15 @@ extension AuthViewController: WebViewViewControllerDelegate {
             switch result {
             case .success(let token):
                 self.delegate?.didAuthenticate(self)
-                print("Аутентификация выполнена! Токен: \(token)")
+                Logger.shared.log(.debug,
+                                  message: "AuthViewController: Аутентификация выполнена!",
+                                  metadata: ["✅ Токен:": token])
+
             case .failure(let error):
                 let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                print("Ошибка аутентификации: \(errorMessage)")
+                Logger.shared.log(.error,
+                                  message: "AuthViewController: Не удалось получить изображения",
+                                  metadata: ["❌": "Ошибка аутентификации: \(errorMessage)"])
                 self.showErrorAlert()
             }
         }
@@ -113,5 +113,19 @@ extension AuthViewController: WebViewViewControllerDelegate {
 extension AuthViewController: AlertPresenterDelegate {
     func presentAlert(_ alert: UIAlertController) {
         present(alert, animated: true)
+    }
+}
+
+// MARK: - Show Error
+private extension AuthViewController {
+    
+    private func showErrorAlert() {
+        let alertModel = AlertModel(
+            title: "Что-то пошло не так(",
+            message: "Не удалось войти в систему",
+            buttons: [AlertButton(title: "OK", style: .cancel, identifier: nil, handler: nil)],
+            context: .error
+        )
+        AlertPresenter.showAlert(with: alertModel, delegate: self)
     }
 }

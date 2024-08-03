@@ -6,14 +6,22 @@ import Foundation
 protocol NetworkService {
     associatedtype Model: Decodable
     
-    func makeRequest(parameters: [String: String], method: String, url: String) -> URLRequest?
+    func makeRequest(parameters: [String: String],
+                     method: String,
+                     url: String) -> URLRequest?
     func parse(data: Data) -> Model?
-    func fetch(parameters: [String: String], method: String, url: String, completion: @escaping (Result<Model, Error>) -> Void)
+    func fetch(parameters: [String: String],
+               method: String,
+               url: String,
+               completion: @escaping (Result<Model, Error>) -> Void)
 }
 
 // MARK: - Extension
 extension NetworkService {
-    func fetch(parameters: [String: String], method: String, url: String, completion: @escaping (Result<Model, Error>) -> Void) {
+    func fetch(parameters: [String: String],
+               method: String,
+               url: String,
+               completion: @escaping (Result<Model, Error>) -> Void) {
         
         let fulfillCompletionOnTheMainThread: (Result<Model, Error>) -> Void = { result in
             DispatchQueue.main.async {
@@ -27,21 +35,39 @@ extension NetworkService {
         }
         
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            
             if let error = error {
                 fulfillCompletionOnTheMainThread(.failure(error))
                 return
             }
-            
-            guard let response = response as? HTTPURLResponse, response.statusCode == 200, let data else {
+
+            guard let response = response as? HTTPURLResponse else {
                 fulfillCompletionOnTheMainThread(.failure(NetworkError.unknownError))
                 return
             }
             
-            if let model = self.parse(data: data) {
-                fulfillCompletionOnTheMainThread(.success(model))
+            if [200, 201].contains(response.statusCode), let data {
+                if let model = self.parse(data: data) {
+                    fulfillCompletionOnTheMainThread(.success(model))
+                } else {
+                    let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
+                    Logger.shared.log(.error,
+                                      message: "NetworkService: Ошибка парсинга",
+                                      metadata: ["❌": error.localizedDescription])
+                    fulfillCompletionOnTheMainThread(.failure(error))
+                }
+            } else if response.statusCode == 403 {
+                let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
+                let errorMassage = NetworkErrorHandler.errorMessage(from: error)
+                Logger.shared.log(.error,
+                                  message: "NetworkService: Не удалось загрузить данные, код ответа: \(response.statusCode)",
+                                  metadata: ["❌": "\(errorMassage)"])
+                fulfillCompletionOnTheMainThread(.failure(error))
             } else {
                 let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
+                let errorMassage = NetworkErrorHandler.errorMessage(from: error)
+                Logger.shared.log(.error,
+                                  message: "NetworkService: Некорректный статус-код ответа: \(response.statusCode)",
+                                  metadata: ["❌": "\(errorMassage)"])
                 fulfillCompletionOnTheMainThread(.failure(error))
             }
         }

@@ -16,5 +16,6 @@ struct AlertModel {
 struct AlertButton {
     let title: String
     let style: UIAlertAction.Style
+    let identifier: String?
     let handler: (() -> Void)?
 }

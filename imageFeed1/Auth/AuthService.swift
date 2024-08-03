@@ -35,12 +35,20 @@ final class AuthService: NSObject {
     func loadAuthView() {
         guard let urlString = authURL(), let url = URL(string: urlString) else {
             delegate?.authService(self, didFailWithError: NetworkError.invalidURLString)
+            Logger.shared.log(.error,
+                              message: "AuthService: Неверная строка URL",
+                              metadata: ["❌": ""])
             return
         }
-        print("Загружаем URL: \(url.absoluteString)")
         
         let request = URLRequest(url: url)
-        DispatchQueue.main.async {
+        
+        Logger.shared.log(.debug,
+                          message: "AuthService: Запрос создан:",
+                          metadata: ["✅": "\(request)"])
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.webView.load(request)
         }
     }
@@ -66,14 +74,17 @@ extension AuthService: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        showErrorAlert(with: NetworkErrorHandler.errorMessage(from: error))
-        print("Ошибка при загрузке: \(error.localizedDescription)")
+        let errorMessage = NetworkErrorHandler.errorMessage(from: error)
+        showErrorAlert(with: errorMessage)
+        Logger.shared.log(.error,
+                          message: "AuthService: Ошибка при загрузке данных WebView",
+                          metadata: ["❌": errorMessage])
     }
     
-
-    
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        print("Загрузка завершена")
+        Logger.shared.log(.debug,
+                          message: "AuthService: Загрузка завершена:",
+                          metadata: ["✅": ""])
     }
 }
 
