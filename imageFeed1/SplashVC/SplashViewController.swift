@@ -1,13 +1,30 @@
 
+
 import UIKit
 
 // MARK: - Object
 final class SplashViewController: UIViewController {
     
-    private let profileService = ProfileService.shared
-    private let storage = OAuth2TokenStorage.shared
-    private let profileImageService = ProfileImageService.shared
-    private let imagesListService = ImagesListService.shared
+    private let profileService: ProfileServiceProtocol
+    private let storage: OAuth2TokenStorageProtocol
+    private let profileImageService: ProfileImageServiceProtocol
+    private let imagesListService: ImagesListServiceProtocol
+    
+    init(profileService: ProfileServiceProtocol = ProfileService.shared,
+         storage: OAuth2TokenStorageProtocol = OAuth2TokenStorage.shared,
+         profileImageService: ProfileImageServiceProtocol = ProfileImageService.shared,
+         imagesListService: ImagesListServiceProtocol = ImagesListService.shared) {
+        
+        self.profileService = profileService
+        self.storage = storage
+        self.profileImageService = profileImageService
+        self.imagesListService = imagesListService
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -41,6 +58,10 @@ final class SplashViewController: UIViewController {
 
         let imagesListViewController = ImagesListViewController()
         let profileViewController = ProfileViewController()
+        profileViewController.configure(ProfilePresenter(view: profileViewController))
+        imagesListViewController.configure(ImagesListPresenter(view: imagesListViewController,
+                                                               imagesListService: imagesListService,
+                                                               storage: storage))
         
         imagesListViewController.tabBarItem = UITabBarItem(title: nil, image: UIImage(systemName: "square.stack.fill"), tag: 0)
         profileViewController.tabBarItem = UITabBarItem(title: nil, image: UIImage(systemName: "person.crop.circle.fill"), tag: 1)

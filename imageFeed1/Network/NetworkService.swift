@@ -1,4 +1,5 @@
 
+
 import Foundation
 
 // MARK: - Protocol
@@ -54,12 +55,19 @@ extension NetworkService {
                                       metadata: ["❌": error.localizedDescription])
                     fulfillCompletionOnTheMainThread(.failure(error))
                 }
+            } else if response.statusCode == 403 {
+                let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
+                let errorMassage = NetworkErrorHandler.errorMessage(from: error)
+                Logger.shared.log(.error,
+                                  message: "NetworkService: Не удалось загрузить данные, код ответа: \(response.statusCode)",
+                                  metadata: ["❌": "\(errorMassage)"])
+                fulfillCompletionOnTheMainThread(.failure(error))
             } else {
                 let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
                 let errorMassage = NetworkErrorHandler.errorMessage(from: error)
                 Logger.shared.log(.error,
-                                  message: "NetworkService: Некорректный статус-код ответа: \(response.statusCode) - \(errorMassage)",
-                                  metadata: ["❌": ""])
+                                  message: "NetworkService: Некорректный статус-код ответа: \(response.statusCode)",
+                                  metadata: ["❌": "\(errorMassage)"])
                 fulfillCompletionOnTheMainThread(.failure(error))
             }
         }

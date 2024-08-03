@@ -1,16 +1,21 @@
 
 
 import UIKit
-import Kingfisher
+
+protocol ProfileViewControllerProtocol: AnyObject {
+    func showProfileDetails(profile: Profile)
+    func showLoading()
+    func hideLoading()
+    func updateProfileImage(with image: UIImage)
+}
 
 // MARK: - Object
 final class ProfileViewController: UIViewController {
     
-    private var profileImageServiceObserver: NSObjectProtocol?
+    private var presenter: ProfilePresenterProtocol?
+    lazy var profileLoadingView = ProfileLoadingView()
     
-    private lazy var profileLoadingView = ProfileLoadingView()
-    
-    private lazy var profileImage: UIImageView = {
+    lazy var profileImage: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.image = UIImage(systemName: "person.crop.circle.fill")
@@ -22,27 +27,28 @@ final class ProfileViewController: UIViewController {
     
     private lazy var exitButton: UIButton = {
         let button = UIButton()
+        button.accessibilityIdentifier = "logoutButton"
         button.setImage(UIImage(systemName: "ipad.and.arrow.forward"), for: .normal)
         button.tintColor = .ypRed
         button.addTarget(self, action: #selector(exitButtonPressed), for: .touchUpInside)
         return button
     }()
     
-    private lazy var nameLabel: UILabel = {
+    lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypWhite
         label.font = UIFont.boldSystemFont(ofSize: 23)
         return label
     }()
     
-    private lazy var loginNameLabel: UILabel = {
+    lazy var loginNameLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypGray
         label.font = UIFont.systemFont(ofSize: 13)
         return label
     }()
     
-    private lazy var descriptionLabel: UILabel = {
+    lazy var descriptionLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypWhite
         label.font = UIFont.systemFont(ofSize: 13)
@@ -74,8 +80,13 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = .ypBlack
         setupUI()
         setupConstraints()
-        addObserver()
-        tryShowProfileDetails()
+        
+        presenter?.viewDidLoad()
+    }
+    
+    func configure(_ presenter: ProfilePresenterProtocol) {
+        self.presenter = presenter
+        self.presenter?.view = self
     }
     
     private func setupUI() {
@@ -85,7 +96,6 @@ final class ProfileViewController: UIViewController {
             .flexibleWidth,
             .flexibleHeight
         ]
-        profileLoadingView.startAnimating()
     }
     
     private func setupConstraints() {
@@ -126,88 +136,37 @@ final class ProfileViewController: UIViewController {
     }
 }
 
-// MARK: - Button Action
-private extension ProfileViewController {
-    @objc private func exitButtonPressed() {
-        
-        let alertModel = AlertModel(
-            title: "Пока, пока!",
-            message: "Уверены что хотите выйти?",
-            buttons: [
-                AlertButton(title: "Нет", style: .default, handler: nil),
-                AlertButton(title: "Да", style: .cancel, handler: {
-                    ProfileLogoutService.shared.logout()
-                })
-            ],
-            context: .back
-        )
-        AlertPresenter.showAlert(with: alertModel, delegate: self)
-    }
-}
-
-// MARK: - Update Profile Details
-private extension ProfileViewController {
-    
-    private func tryShowProfileDetails() {
-        let profileService = ProfileService.shared
-        if let profile = profileService.profile {
-            updateProfileDetails(profile: profile)
-            profileLoadingView.removeFromSuperview()
-        } else {
-            profileLoadingView.startAnimating()
-        }
+// MARK: - ProfileViewControllerProtocol
+extension ProfileViewController: ProfileViewControllerProtocol {
+    func showLoading() {
+        profileLoadingView.startAnimating()
     }
     
-    private func updateProfileDetails(profile: Profile) {
+    func hideLoading() {
+        profileLoadingView.removeFromSuperview()
+    }
+    
+    func showProfileDetails(profile: Profile) {
         nameLabel.text = profile.name
         loginNameLabel.text = profile.loginName
         descriptionLabel.text = profile.bio
     }
+    
+    func updateProfileImage(with image: UIImage) {
+        profileImage.image = image
+    }
 }
 
-
-// MARK: - Load Image & Observer
-private extension ProfileViewController {
-    private func addObserver() {
-        profileImageServiceObserver = NotificationCenter.default.addObserver(forName: ProfileImageService.didChangeNotification,
-                                                                             object: nil,
-                                                                             queue: .main,
-                                                                             using: { [weak self] notification in
-            guard let self else { return }
-            
-            if let userInfo = notification.userInfo, let profileImageURL = userInfo["URL"] as? String {
-                self.loadImage(from: profileImageURL)
-            }
-        })
-        if let profileImageURL = ProfileImageService.shared.avatarURL {
-            loadImage(from: profileImageURL)
-        }
-    }
-    
-    private func loadImage(from urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        
-        profileImage.kf.indicatorType = .activity
-        profileImage.kf.setImage(with: url,
-                                 placeholder: UIImage(systemName: "person.crop.circle.fill"),
-                                 options: [.transition(.fade(0.2))]) { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(_):
-                self.profileLoadingView.removeFromSuperview()
-            case .failure(let error):
-                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                Logger.shared.log(.error,
-                                  message: "ProfileViewController: Не удалось загрузить Image",
-                                  metadata: ["❌": errorMessage])
-            }
-        }
+// MARK: - Button Action
+extension ProfileViewController {
+    @objc func exitButtonPressed() {
+        presenter?.exitButtonPressed()
     }
 }
 
 // MARK: - AlertPresenterDelegate
 extension ProfileViewController: AlertPresenterDelegate {
     func presentAlert(_ alert: UIAlertController) {
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true)
     }
 }

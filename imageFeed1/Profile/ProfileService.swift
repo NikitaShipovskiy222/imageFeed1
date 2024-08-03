@@ -1,6 +1,12 @@
 
 
 import UIKit
+// MARK: - Protocol
+protocol ProfileServiceProtocol {
+    var isProfileLoaded: Bool { get }
+    
+    func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void)
+}
 
 // MARK: - Object
 final class ProfileService {
@@ -57,6 +63,9 @@ extension ProfileService: NetworkService {
             return nil
         }
     }
+}
+// MARK: - ProfileServiceProtocol
+extension ProfileService: ProfileServiceProtocol {
     
     func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void) {
         serialQueue.async { [weak self] in

@@ -1,8 +1,11 @@
 
-
 import Foundation
 
-final class OAuth2TokenStorage {
+protocol OAuth2TokenStorageProtocol {
+    var token: String? { get }
+}
+
+final class OAuth2TokenStorage: OAuth2TokenStorageProtocol {
     static let shared = OAuth2TokenStorage()
 
     private let keychainService = KeychainService.shared
@@ -36,3 +39,4 @@ final class OAuth2TokenStorage {
                           metadata: ["❎": ""])
     }
 }
+

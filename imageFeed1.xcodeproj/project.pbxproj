@@ -43,6 +43,13 @@
 		01AB88B42C5D663B006F96F4 /* PhotoResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88B22C5D663B006F96F4 /* PhotoResult.swift */; };
 		01AB88B82C5D66D7006F96F4 /* ProfileLogoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88B62C5D66D7006F96F4 /* ProfileLogoutService.swift */; };
 		01AB88B92C5D66D7006F96F4 /* ProfileLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88B72C5D66D7006F96F4 /* ProfileLoadingView.swift */; };
+		01AB88BB2C5E2CA7006F96F4 /* ImagesListLikeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88BA2C5E2CA7006F96F4 /* ImagesListLikeHelper.swift */; };
+		01AB88BD2C5E2CD0006F96F4 /* ImagesListPhotosHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88BC2C5E2CD0006F96F4 /* ImagesListPhotosHelper.swift */; };
+		01AB88BF2C5E2D0F006F96F4 /* ProfileImageRequestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88BE2C5E2D0F006F96F4 /* ProfileImageRequestHelper.swift */; };
+		01AB88C12C5E2D3C006F96F4 /* ProfileImageResponseHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88C02C5E2D3C006F96F4 /* ProfileImageResponseHelper.swift */; };
+		01AB88C32C5E2D91006F96F4 /* ProfilePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88C22C5E2D91006F96F4 /* ProfilePresenter.swift */; };
+		01AB88C52C5E2E68006F96F4 /* ImageListPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88C42C5E2E68006F96F4 /* ImageListPresenter.swift */; };
+		01AB88C72C5E2E8C006F96F4 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB88C62C5E2E8C006F96F4 /* DateFormatter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -81,6 +88,13 @@
 		01AB88B22C5D663B006F96F4 /* PhotoResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoResult.swift; sourceTree = "<group>"; };
 		01AB88B62C5D66D7006F96F4 /* ProfileLogoutService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileLogoutService.swift; sourceTree = "<group>"; };
 		01AB88B72C5D66D7006F96F4 /* ProfileLoadingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileLoadingView.swift; sourceTree = "<group>"; };
+		01AB88BA2C5E2CA7006F96F4 /* ImagesListLikeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesListLikeHelper.swift; sourceTree = "<group>"; };
+		01AB88BC2C5E2CD0006F96F4 /* ImagesListPhotosHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesListPhotosHelper.swift; sourceTree = "<group>"; };
+		01AB88BE2C5E2D0F006F96F4 /* ProfileImageRequestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImageRequestHelper.swift; sourceTree = "<group>"; };
+		01AB88C02C5E2D3C006F96F4 /* ProfileImageResponseHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImageResponseHelper.swift; sourceTree = "<group>"; };
+		01AB88C22C5E2D91006F96F4 /* ProfilePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePresenter.swift; sourceTree = "<group>"; };
+		01AB88C42C5E2E68006F96F4 /* ImageListPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageListPresenter.swift; sourceTree = "<group>"; };
+		01AB88C62C5E2E8C006F96F4 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +146,7 @@
 				01AB884B2C5A4519006F96F4 /* LaunchScreen.storyboard */,
 				01AB88802C5A4F45006F96F4 /* Constants.swift */,
 				01AB888B2C5CC678006F96F4 /* Logger.swift */,
+				01AB88C62C5E2E8C006F96F4 /* DateFormatter.swift */,
 			);
 			path = imageFeed1;
 			sourceTree = "<group>";
@@ -143,6 +158,9 @@
 				01AB88462C5A4505006F96F4 /* ImagesListCell.swift */,
 				01AB88452C5A4505006F96F4 /* ImagesListViewController.swift */,
 				01AB88AE2C5CEE9A006F96F4 /* ImagesListService.swift */,
+				01AB88BA2C5E2CA7006F96F4 /* ImagesListLikeHelper.swift */,
+				01AB88BC2C5E2CD0006F96F4 /* ImagesListPhotosHelper.swift */,
+				01AB88C42C5E2E68006F96F4 /* ImageListPresenter.swift */,
 			);
 			path = ImagesList;
 			sourceTree = "<group>";
@@ -185,6 +203,9 @@
 				01AB88A32C5CCA46006F96F4 /* ProfileService.swift */,
 				01AB88B72C5D66D7006F96F4 /* ProfileLoadingView.swift */,
 				01AB88B62C5D66D7006F96F4 /* ProfileLogoutService.swift */,
+				01AB88BE2C5E2D0F006F96F4 /* ProfileImageRequestHelper.swift */,
+				01AB88C02C5E2D3C006F96F4 /* ProfileImageResponseHelper.swift */,
+				01AB88C22C5E2D91006F96F4 /* ProfilePresenter.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -350,13 +371,18 @@
 				01AB888C2C5CC678006F96F4 /* Logger.swift in Sources */,
 				01AB88762C5A4E95006F96F4 /* WebViewViewController.swift in Sources */,
 				01AB88472C5A4505006F96F4 /* ImagesListViewController.swift in Sources */,
+				01AB88C12C5E2D3C006F96F4 /* ProfileImageResponseHelper.swift in Sources */,
 				01AB88482C5A4505006F96F4 /* ImagesListCell.swift in Sources */,
+				01AB88BB2C5E2CA7006F96F4 /* ImagesListLikeHelper.swift in Sources */,
+				01AB88BD2C5E2CD0006F96F4 /* ImagesListPhotosHelper.swift in Sources */,
 				01AB88722C5A4E95006F96F4 /* OAuth2Service.swift in Sources */,
+				01AB88C52C5E2E68006F96F4 /* ImageListPresenter.swift in Sources */,
 				01AB88772C5A4E95006F96F4 /* OAuth2TokenStorage.swift in Sources */,
 				01AB888A2C5CABC1006F96F4 /* AlertPresenter.swift in Sources */,
 				01AB88732C5A4E95006F96F4 /* OAuthTokenResponseBody.swift in Sources */,
 				01AB88792C5A4E95006F96F4 /* AuthService.swift in Sources */,
 				01AB88A52C5CCA46006F96F4 /* ProfileService.swift in Sources */,
+				01AB88C32C5E2D91006F96F4 /* ProfilePresenter.swift in Sources */,
 				01AB88A42C5CCA46006F96F4 /* ProfileImageService.swift in Sources */,
 				01AB889B2C5CC7E3006F96F4 /* NetworkErrorHandler.swift in Sources */,
 				01AB88812C5A4F45006F96F4 /* Constants.swift in Sources */,
@@ -365,10 +391,12 @@
 				01AB88B42C5D663B006F96F4 /* PhotoResult.swift in Sources */,
 				01AB88A12C5CC99E006F96F4 /* ProfileResult.swift in Sources */,
 				01AB88742C5A4E95006F96F4 /* AuthViewController.swift in Sources */,
+				01AB88C72C5E2E8C006F96F4 /* DateFormatter.swift in Sources */,
 				01AB88752C5A4E95006F96F4 /* KeychainService.swift in Sources */,
 				01AB88AC2C5CEDE9006F96F4 /* GenericNetworkService.swift in Sources */,
 				01AB88B92C5D66D7006F96F4 /* ProfileLoadingView.swift in Sources */,
 				01AB88A72C5CCAC4006F96F4 /* UIBlockingProgressHUD.swift in Sources */,
+				01AB88BF2C5E2D0F006F96F4 /* ProfileImageRequestHelper.swift in Sources */,
 				01AB887C2C5A4EB6006F96F4 /* SingleImageViewController.swift in Sources */,
 				01AB88B82C5D66D7006F96F4 /* ProfileLogoutService.swift in Sources */,
 				01AB88872C5CAB94006F96F4 /* AlertModel.swift in Sources */,

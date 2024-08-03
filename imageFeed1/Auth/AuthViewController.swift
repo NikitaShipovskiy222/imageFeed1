@@ -123,7 +123,7 @@ private extension AuthViewController {
         let alertModel = AlertModel(
             title: "Что-то пошло не так(",
             message: "Не удалось войти в систему",
-            buttons: [AlertButton(title: "OK", style: .cancel, handler: nil)],
+            buttons: [AlertButton(title: "OK", style: .cancel, identifier: nil, handler: nil)],
             context: .error
         )
         AlertPresenter.showAlert(with: alertModel, delegate: self)

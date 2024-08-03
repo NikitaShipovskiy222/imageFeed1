@@ -108,8 +108,8 @@ private extension WebViewViewController {
             title: "Выход из авторизации",
             message: "Вы уверены, что хотите покинуть страницу авторизации?",
             buttons: [
-                AlertButton(title: "Отмена", style: .cancel, handler: nil),
-                AlertButton(title: "Выход", style: .destructive, handler: { [weak self] in
+                AlertButton(title: "Отмена", style: .cancel, identifier: nil, handler: nil),
+                AlertButton(title: "Выход", style: .destructive, identifier: nil, handler: { [weak self] in
                     guard let self = self else { return }
                     self.delegate?.webViewViewControllerDidCancel(self)
                 })
@@ -134,7 +134,7 @@ extension WebViewViewController: AuthServiceDelegate {
         let alertModel = AlertModel(
             title: "Ошибка",
             message: NetworkErrorHandler.errorMessage(from: error),
-            buttons: [AlertButton(title: "OK", style: .cancel, handler: nil)],
+            buttons: [AlertButton(title: "OK", style: .cancel, identifier: nil, handler: nil)],
             context: .error
         )
         AlertPresenter.showAlert(with: alertModel, delegate: self)
