@@ -1,42 +1,31 @@
 
-import Foundation
-
-protocol OAuth2TokenStorageProtocol {
-    var token: String? { get }
-}
+import UIKit
+import SwiftKeychainWrapper
 
 final class OAuth2TokenStorage: OAuth2TokenStorageProtocol {
+    
+    private enum Keys: String { 
+        case token
+        
+    }
     static let shared = OAuth2TokenStorage()
-
-    private let keychainService = KeychainService.shared
-    private let tokenKey = "OAuth2Token"
-
-    private init() {}
-
+    private let keyChain = KeychainWrapper.standard
+    
     var token: String? {
         get {
-            keychainService.get(valueFor: tokenKey)
+            return keyChain.string(forKey: Keys.token.rawValue)
         }
         set {
-            if let newValue = newValue {
-                _ = keychainService.set(value: newValue, for: tokenKey)
-                Logger.shared.log(.debug,
-                                  message: "OAuth2TokenStorage: Токен успешно успешно сохранен в KeychainService",
-                                  metadata: ["✅": "\(newValue)"])
-            } else {
-                _ = keychainService.delete(valueFor: tokenKey)
-                Logger.shared.log(.error,
-                                  message: "OAuth2TokenStorage: Ошибка сохранения токена в KeychainService",
-                                  metadata: ["❌": ""])
-            }
+            if let token = newValue {
+                keyChain.set(token, forKey: Keys.token.rawValue)
+            } else { return }
         }
     }
     
     func logout() {
-        _ = keychainService.delete(valueFor: tokenKey)
-        Logger.shared.log(.debug,
-                          message: "OAuth2TokenStorage: Токен успешно удален из KeychainService",
-                          metadata: ["❎": ""])
+        keyChain.removeObject(forKey: Keys.token.rawValue)
     }
 }
+
+
 

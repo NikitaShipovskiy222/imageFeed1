@@ -2,7 +2,7 @@
 
 import Foundation
 
-class GenericNetworkService<T: Decodable>: NetworkService {
+class GenericNetworkService<T: Decodable>: URLSession {
     typealias Model = T
     
     func makeRequest(parameters: [String: String], method: String, url: String) -> URLRequest? {

@@ -1,76 +1,39 @@
 
-
 import Foundation
 
-// MARK: - Protocol
-protocol NetworkService {
-    associatedtype Model: Decodable
-    
-    func makeRequest(parameters: [String: String],
-                     method: String,
-                     url: String) -> URLRequest?
-    func parse(data: Data) -> Model?
-    func fetch(parameters: [String: String],
-               method: String,
-               url: String,
-               completion: @escaping (Result<Model, Error>) -> Void)
-}
-
-// MARK: - Extension
-extension NetworkService {
-    func fetch(parameters: [String: String],
-               method: String,
-               url: String,
-               completion: @escaping (Result<Model, Error>) -> Void) {
-        
-        let fulfillCompletionOnTheMainThread: (Result<Model, Error>) -> Void = { result in
+extension URLSession {
+    func objectTask<T: Decodable>(for request: URLRequest, completion: @escaping (Result<T, Error>) -> Void) -> URLSessionTask {
+        let fulfillCompletionOnTheMainThread: (Result<T, Error>) -> Void = { result in
             DispatchQueue.main.async {
                 completion(result)
             }
         }
         
-        guard let request = makeRequest(parameters: parameters, method: method, url: url) else {
-            fulfillCompletionOnTheMainThread(.failure(NetworkError.unableToConstructURL))
-            return
-        }
+        print("extension URLSession")
         
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                fulfillCompletionOnTheMainThread(.failure(error))
-                return
-            }
-
-            guard let response = response as? HTTPURLResponse else {
-                fulfillCompletionOnTheMainThread(.failure(NetworkError.unknownError))
-                return
-            }
-            
-            if [200, 201].contains(response.statusCode), let data {
-                if let model = self.parse(data: data) {
-                    fulfillCompletionOnTheMainThread(.success(model))
+        let task = dataTask(with: request, completionHandler: { data, response, error in
+            if let data = data,
+               let response = response,
+               let statusCode = (response as? HTTPURLResponse)?.statusCode {
+                
+                if 200..<300 ~= statusCode {
+                    do {
+                        let decoder = JSONDecoder()
+                        let result = try decoder.decode(T.self, from: data)
+                        fulfillCompletionOnTheMainThread(.success(result))
+                    } catch {
+                        fulfillCompletionOnTheMainThread(.failure(NetworkError.urlRequestError(error)))
+                    }
                 } else {
-                    let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
-                    Logger.shared.log(.error,
-                                      message: "NetworkService: Ошибка парсинга",
-                                      metadata: ["❌": error.localizedDescription])
-                    fulfillCompletionOnTheMainThread(.failure(error))
+                    fulfillCompletionOnTheMainThread(.failure(NetworkError.httpStatusCode(statusCode)))
                 }
-            } else if response.statusCode == 403 {
-                let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
-                let errorMassage = NetworkErrorHandler.errorMessage(from: error)
-                Logger.shared.log(.error,
-                                  message: "NetworkService: Не удалось загрузить данные, код ответа: \(response.statusCode)",
-                                  metadata: ["❌": "\(errorMassage)"])
-                fulfillCompletionOnTheMainThread(.failure(error))
+            } else if let error = error {
+                fulfillCompletionOnTheMainThread(.failure(NetworkError.urlRequestError(error)))
             } else {
-                let error = NetworkErrorHandler.handleErrorResponse(statusCode: response.statusCode)
-                let errorMassage = NetworkErrorHandler.errorMessage(from: error)
-                Logger.shared.log(.error,
-                                  message: "NetworkService: Некорректный статус-код ответа: \(response.statusCode)",
-                                  metadata: ["❌": "\(errorMassage)"])
-                fulfillCompletionOnTheMainThread(.failure(error))
+                fulfillCompletionOnTheMainThread(.failure(NetworkError.urlSessionError))
             }
-        }
-        task.resume()
+        })
+        
+        return task
     }
 }
