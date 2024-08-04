@@ -1,131 +1,112 @@
 
 import UIKit
-import ProgressHUD
-// MARK: - Protocol
-protocol AuthViewControllerDelegate: AnyObject {
-    func didAuthenticate(_ vc: AuthViewController)
-    func fetchProfile(_ token: String)
-}
 
-// MARK: - Object
-final class AuthViewController: UIViewController {
+class AuthViewController: UIViewController {
     
+    // MARK: - View
+    
+    private var authImageView = UIImageView()
+    private var loginButton = UIButton()
+    
+    // MARK: Properties
+    
+    private let oAuth2Service = OAuth2Service.shared
+    private let oAuth2TokenStorage = OAuth2TokenStorage()
     weak var delegate: AuthViewControllerDelegate?
-    private let oauth2Service = OAuth2Service.shared
     
-    private lazy var image: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "VectorAuth")
-        return imageView
-    }()
+    // MARK: - Lifecycle
     
-    private lazy var loginButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("Войти", for: .normal)
-        button.setTitleColor(.ypBlack, for: .normal)
-        button.titleLabel?.font = .boldSystemFont(ofSize: 17)
-        button.layer.cornerRadius = 16
-        button.layer.masksToBounds = true
-        button.backgroundColor = .ypWhite
-        button.addTarget(self, action: #selector(loginButtonPressed), for: .touchUpInside)
-        return button
-    }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypBlack
-        setupUI()
+        configureAuthImageView()
+        configureLoginButton()
+        configureBackButton()
     }
     
-    private func setupUI() {
-        [image, loginButton].forEach {
-            view.addSubview($0)
-        }
-        setupConstraints()
+    // MARK: - Action
+    
+    @objc
+    private func didTapLoginButton() {
+        segueToWebView()
     }
     
-    private func setupConstraints() {
-        [image, loginButton].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-        }
+    @objc
+    private func didTapBackButton() {
+        dismiss(animated: true, completion: nil)
+    }
+}
+
+// MARK: - Private extension
+
+private extension AuthViewController {
+    
+    // MARK: - Configuration function
+    
+    func configureAuthImageView() {
+        authImageView.translatesAutoresizingMaskIntoConstraints = false
+        authImageView.image = UIImage(named: "VectorAuth")
+        view.addSubview(authImageView)
         
         NSLayoutConstraint.activate([
-            image.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            image.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            image.widthAnchor.constraint(equalToConstant: 60),
-            image.heightAnchor.constraint(equalToConstant: 60),
-            
-            loginButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loginButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -90),
-            loginButton.heightAnchor.constraint(equalToConstant: 48),
-            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
+            authImageView.heightAnchor.constraint(equalToConstant: 60),
+            authImageView.widthAnchor.constraint(equalToConstant: 60),
+            authImageView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            authImageView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor)
         ])
     }
-}
-
-// MARK: - Button Action
-private extension AuthViewController {
-    @objc private func loginButtonPressed() {
-        let webViewViewController = WebViewViewController()
-        webViewViewController.delegate = self
-        navigationController?.pushViewController(webViewViewController, animated: true)
+    
+    func  configureLoginButton() {
+        loginButton.translatesAutoresizingMaskIntoConstraints = false
+        loginButton.backgroundColor = .ypWhite
+        loginButton.setTitle("Войти", for: .normal)
+        loginButton.setTitleColor(.ypBlack, for: .normal)
+        loginButton.titleLabel?.font = UIFont.systemFont(ofSize: 17)
+        loginButton.layer.cornerRadius = 16
+        loginButton.clipsToBounds = true
+        loginButton.addTarget(self,
+                              action: #selector(Self.didTapLoginButton),
+                              for: .touchUpInside)
+        view.addSubview(loginButton)
+        
+        NSLayoutConstraint.activate([
+            loginButton.heightAnchor.constraint(equalToConstant: 48),
+            loginButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -124),
+            loginButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            loginButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
+        ])
     }
+    
+    func configureBackButton() {
+        navigationController?.navigationBar.backIndicatorImage = UIImage.backward
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(named: "backward")
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "",
+                                                           style: .plain,
+                                                           target: self,
+                                                           action: #selector(didTapBackButton))
+        navigationItem.backBarButtonItem?.tintColor = UIColor.ypBlack
+    }
+    
+    // MARK: - Function
+    
+    func segueToWebView() {
+        let webViewVewController = WebViewViewController()
+        webViewVewController.delegate = self
+        webViewVewController.modalPresentationStyle = .fullScreen
+        self.present(webViewVewController, animated: true, completion: nil)
+    }
+    
 }
 
-// MARK: - WebViewViewControllerDelegate
+// MARK: - Extension
+
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-        
-        UIBlockingProgressHUD.show()
-        
-        oauth2Service.fetchOAuthToken(code: code) { [weak self] result in
-            guard let self else { return }
-            
-            UIBlockingProgressHUD.dismiss()
-            
-            switch result {
-            case .success(let token):
-                self.delegate?.didAuthenticate(self)
-                Logger.shared.log(.debug,
-                                  message: "AuthViewController: Аутентификация выполнена!",
-                                  metadata: ["✅ Токен:": token])
-
-            case .failure(let error):
-                let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                Logger.shared.log(.error,
-                                  message: "AuthViewController: Не удалось получить изображения",
-                                  metadata: ["❌": "Ошибка аутентификации: \(errorMessage)"])
-                self.showErrorAlert()
-            }
-        }
+        delegate?.authViewController(self, didAuthenticateWithCode: code)
     }
     
-    func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
-        navigationController?.popViewController(animated: true)
-    }
-    
-    func webViewViewController(_ vc: WebViewViewController, didFailWithError error: any Error) {
-        showErrorAlert()
-    }
-}
-// MARK: - AlertPresenterDelegate
-extension AuthViewController: AlertPresenterDelegate {
-    func presentAlert(_ alert: UIAlertController) {
-        present(alert, animated: true)
+    func webViewViewControllerDidCancell(_ vc: WebViewViewController) {
+        dismiss(animated: true, completion: nil)
     }
 }
 
-// MARK: - Show Error
-private extension AuthViewController {
-    
-    private func showErrorAlert() {
-        let alertModel = AlertModel(
-            title: "Что-то пошло не так(",
-            message: "Не удалось войти в систему",
-            buttons: [AlertButton(title: "OK", style: .cancel, identifier: nil, handler: nil)],
-            context: .error
-        )
-        AlertPresenter.showAlert(with: alertModel, delegate: self)
-    }
-}

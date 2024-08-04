@@ -1,97 +1,69 @@
 
 
 import UIKit
-// MARK: - Protocol
-protocol ProfileServiceProtocol {
-    var isProfileLoaded: Bool { get }
-    
-    func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void)
-}
 
-// MARK: - Object
 final class ProfileService {
     
-    static let shared = ProfileService()
+    // MARK: - Properties
     
+    static let shared = ProfileService()
+    private let urlSession = URLSession.shared
+    var oAuth2TokenStorage = OAuth2TokenStorage()
     private(set) var profile: Profile?
-    private let serialQueue = DispatchQueue(label: "ProfileService.serialQueue")
+    private var task: URLSessionTask?
+    private var lastCode: String?
+    
+    // MARK: - Init
     
     private init() {}
     
-    var isProfileLoaded: Bool {
-        return profile != nil
-    }
+    // MARK: - Function
     
-    func clearProfileData() {
-        profile = nil
-        Logger.shared.log(.debug,
-                          message: "ProfileService: Данные профиля успешно удалены",
-                          metadata: ["❎": ""])
-    }
-}
-// MARK: - NetworkService
-extension ProfileService: NetworkService {
-    func makeRequest(parameters: [String: String], method: String, url: String) -> URLRequest? {
-        guard let url = URL(string: url) else {
-            Logger.shared.log(.error, message: "ProfileService: Неверная строка URL",
-                              metadata: ["❌": url])
+    private func makeProfileRequest(token: String) -> URLRequest? {
+        guard let url = URL(string: ProfileConstants.urlProfilePath) else {
+            assertionFailure("Ошибка создания url профиля")
             return nil
         }
-        
         var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue("Bearer \(parameters["token"] ?? "")", forHTTPHeaderField: "Authorization")
-        
-        Logger.shared.log(.debug,
-                          message: "ProfileService: Запрос данных профиля создан:",
-                          metadata: ["✅": "\(request)"])
-        
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        print(request)
         return request
     }
     
-    func parse(data: Data) -> Profile? {
-        do {
-            let userProfile = try JSONDecoder().decode(ProfileResult.self, from: data)
-            Logger.shared.log(.debug,
-                              message: "ProfileService: Данные профиля успешно обработаны",
-                              metadata: ["✅" : ""])
-            return Profile(userProfile: userProfile)
-        } catch {
-            Logger.shared.log(.error,
-                              message: "ProfileService: Ошибка парсинга" ,
-                              metadata: ["❌": error.localizedDescription])
-            return nil
-        }
-    }
-}
-// MARK: - ProfileServiceProtocol
-extension ProfileService: ProfileServiceProtocol {
+    
     
     func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void) {
-        serialQueue.async { [weak self] in
-            guard let self else { return }
-            self.fetch(parameters: ["token": token],
-                       method: "GET",
-                       url: APIEndpoints.Profile.me) { (result: Result<Profile, Error>) in
+        
+        assert(Thread.isMainThread)
+        if lastCode == token { return }
+        task?.cancel()
+        lastCode = token
+        
+        guard let request = makeProfileRequest(token: token) else {
+            completion(.failure(ProfileServiceError.invalidRequest))
+            return
+        }
+        
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<ProfileResult, Error>) in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
                 switch result {
-                case .success(let profile):
-                    DispatchQueue.main.async {
-                        self.profile = profile
-                        Logger.shared.log(.debug,
-                                          message: "ProfileService: Данные профиля успешно получены",
-                                          metadata: ["✅": ""])
-                        completion(.success(profile))
-                    }
+                case .success(let profileResult):
+                    let person = Profile(result: profileResult)
+                    completion(.success(person))
+                    self.profile = person
+                    self.task = nil
                 case .failure(let error):
-                    let errorMessage = NetworkErrorHandler.errorMessage(from: error)
-                    DispatchQueue.main.async {
-                        Logger.shared.log(.error,
-                                          message: "ProfileService: Не удалось загрузить профиль",
-                                          metadata: ["❌": errorMessage])
-                        completion(.failure(error))
-                    }
+                    completion(.failure(error))
+                    self.lastCode = nil
                 }
             }
         }
+        self.task = task
+        task.resume()
     }
+ 
+    
 }
+

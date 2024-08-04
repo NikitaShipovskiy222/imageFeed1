@@ -1,36 +1,23 @@
 
-
 import Foundation
 
-enum APIEndpoints {
-    enum OAuth {
-        static let token = "https://unsplash.com/oauth/token"
-    }
-
-    enum Profile {
-        static func profile(username: String) -> String {
-            return "https://api.unsplash.com/users/\(username)"
-        }
-        static let me = "https://api.unsplash.com/me"
-    }
-    
-    enum Photos {
-        static let photos = "https://api.unsplash.com/photos"
-    }
+enum Constants {
+    static let accessKey = "_ZT_Gb7ZjRKinn2vJy2VaNsf4c6alNo0JwDC8MURW3k"
+    static let secretKey = "ivsNW9zyO53Gs_OT6ZRte9B-j2FoIEE2ankpsqWOkyk"
+    static let redirectURI = "urn:ietf:wg:oauth:2.0:oob"
+    static let accessScope = "public+read_user+write_likes"
+    static let defaultBaseURL = "https://api.unsplash.com/"
 }
 
-enum Constants {
-    static var accessKey: String {
-        return KeychainService.shared.get(valueFor: "accessKey") ?? ""
-    }
-    static var secretKey: String {
-        return KeychainService.shared.get(valueFor: "secretKey") ?? ""
-    }
-    static var redirectURI: String {
-        return KeychainService.shared.get(valueFor: "redirectURI") ?? ""
-    }
-    static let accessScope = "public+read_user+write_likes"
-    static let defaultBaseURL = URL(string: "https://api.unsplash.com")!
+enum WebViewConstants {
     static let unsplashAuthorizeURLString = "https://unsplash.com/oauth/authorize"
-    static let authRedirectPath = "/oauth/authorize/native"
+    static let urlComponentsPath = "/oauth/authorize/native"
+}
+
+enum OAuthConstants {
+    static let baseURL = "https://unsplash.com"
+}
+
+enum ProfileConstants {
+    static let urlProfilePath = "https://api.unsplash.com/me"
 }

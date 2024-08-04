@@ -1,35 +1,23 @@
 
-
 import UIKit
 
-// MARK: - Delegate
-protocol AlertPresenterDelegate: AnyObject {
-    func presentAlert(_ alert: UIAlertController)
-}
-// MARK: - Object
-final class AlertPresenter {
+class AlertPresentor: UIViewController {
     
-    weak var delegate: AlertPresenterDelegate?
+    static let shared = AlertPresentor()
     
-    static func showAlert(with model: AlertModel, delegate: AlertPresenterDelegate?) {
-        let alert = UIAlertController(title: model.title, message: model.message, preferredStyle: .alert)
-        
-        for button in model.buttons {
-            let action = UIAlertAction(title: button.title, style: button.style) { _ in
-                button.handler?()
+    func showNetworkError(with: Error) {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так(",
+            message: "Не удалось войти в систему",
+            preferredStyle: .alert)
+        let action = UIAlertAction(
+            title: "ОК",
+            style: .default) { _ in
+                alert.dismiss(animated: true)
             }
-            alert.addAction(action)
-        }
-        
-        switch model.context {
-        case .back:
-            alert.view.accessibilityIdentifier = "Back"
-        case .error:
-            alert.view.accessibilityIdentifier = "ErrorAlert"
-        case .logout:
-            alert.view.accessibilityIdentifier = "Logout"
-        }
-        
-        delegate?.presentAlert(alert)
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+
     }
+
 }
